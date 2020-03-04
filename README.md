@@ -1,2 +1,2 @@
 # Physics-Simulator
-Python made simulations for university physics 1
+Python made simulations for University Physics 1
