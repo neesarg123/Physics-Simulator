@@ -24,7 +24,7 @@ clock = pygame.time.Clock()
 
 # draw ground
 def ground():
-    pygame.draw.line(display, (0, 255, 0), (0, 540), (1000, 540), 1)
+    pygame.draw.rect(display, (0, 255, 0), [0, 540, 1200, 200], 0)
 
 
 # draw ball
@@ -35,32 +35,34 @@ def ball(x, y, color):
 # calculate x-cord from time, initial x, given initial velocity and angle
 def getX(x0, time, vel, angle):
     velx = vel * math.cos((angle / 360) * (2 * math.pi))
-    return int(Decimal(round(x0 + velx * time, 1)).to_integral_value(rounding=ROUND_HALF_UP))
+    return x0 + velx * time
 
 
 # calculate total time of travel given initial velocity and angle
 def getTotTime(vel, angle, height):
     vely = vel * math.sin((angle / 360) * (2 * math.pi))
-    d = (vely ** 2) - (4 * -4.9 * (height))
+    d = (vely ** 2) - (4 * -4.9 * (height + 20))
     tot_time = (-vely - math.sqrt(d)) / (2 * -4.9)
-    return int(Decimal(round(tot_time, 1)).to_integral_value(rounding=ROUND_HALF_UP))
+    return tot_time
 
 
 # calculate y-cord from time, initial y, given initial velocity, and angle
 def getY(y0, time, vel, angle):
     vely = vel * math.sin((angle / 360) * (2 * math.pi))
-    return int(Decimal(round(y0 - vely * time + 4.9 * math.pow(time, 2), 1)).to_integral_value(rounding=ROUND_HALF_UP))
+    return y0 - vely * time + 4.9 * math.pow(time, 2)
 
 
 # draw trajectory given the initial velocity and angle
 def draw_trajectory(initX, initY, vel, angle):
-    tot_time = int(Decimal(round(getTotTime(vel, angle, initY), 1)).to_integral_value(rounding=ROUND_HALF_UP))
+    # calculating total time of travel times 100 for better accuracy
+    tot_time_large = int(Decimal(100 * getTotTime(vel, angle, Y_COPY)).to_integral_value())
 
     xcord = 0
     ycord = 0
-    for i in range(0, 10 * tot_time + 1):
-        xcord = getX(initX, i / 10, vel, angle)
-        ycord = getY(520 - initY, i / 10, vel, angle)
+
+    for i in range(0, tot_time_large + 1):
+        xcord = int(Decimal(getX(initX, i / 100, vel, angle)).to_integral_value(rounding=ROUND_HALF_UP))
+        ycord = int(Decimal(getY(520 - initY, i / 100, vel, angle)).to_integral_value(rounding=ROUND_HALF_UP))
 
         pygame.draw.line(display, (255, 0, 0), (xcord, ycord), (xcord + 1, ycord + 1), 5)
 
@@ -70,9 +72,9 @@ def draw_trajectory(initX, initY, vel, angle):
 # draw x-directional and y-directional vectors
 def drawVectors(vel, angle, x, y, y_change):
     velx = vel * math.cos((angle / 360) * (2 * math.pi))
-    pygame.draw.line(display, (242, 218, 0), (x, y), (x + velx * 2, y), 3)
+    vector_x = pygame.draw.line(display, (242, 218, 0), (x, y), (x + velx * 2, y), 3)
 
-    vectory = pygame.draw.line(display, (242, 0, 173), (x, y), (x, y + (y_change * 15)), 3)
+    vector_y = pygame.draw.line(display, (242, 0, 173), (x, y), (x, y + (y_change * 15)), 3)
 
 
 # displaying text
@@ -98,7 +100,9 @@ def displayText(initVel, velx, vely, distTraveled, tot_time):
     text_rect.center = (700, 250)
     display.blit(text_dist, text_rect)
 
-    text_tot_time = font.render('Total Time : ' + str(tot_time) + " s", True, (255, 255, 255), (59, 88, 107))
+    text_tot_time = font.render(
+        'Total Time : ' + str(int(Decimal(tot_time).to_integral_value(rounding=ROUND_HALF_UP))) + " s", True,
+        (255, 255, 255), (59, 88, 107))
     text_rect = text_tot_time.get_rect()
     text_rect.center = (700, 300)
     display.blit(text_tot_time, text_rect)
@@ -115,6 +119,9 @@ x = 40
 X_COPY = x
 Y_COPY = y
 
+# calculating total time times 100 for better accuracy
+tot_time_large = int(Decimal(10 * getTotTime(vel, angle, Y_COPY)).to_integral_value())
+
 # run loop
 running = True
 while running:
@@ -122,9 +129,9 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    for i in range(0, 10 * getTotTime(vel, angle, Y_COPY) + 1):
-        xcord = getX(X_COPY, i / 10, vel, angle)
-        ycord = getY(520 - Y_COPY, i / 10, vel, angle)
+    for i in range(0, tot_time_large + 1):
+        xcord = int(Decimal(getX(X_COPY, i / 10, vel, angle)).to_integral_value(rounding=ROUND_HALF_UP))
+        ycord = int(Decimal(getY(520 - Y_COPY, i / 10, vel, angle)).to_integral_value(rounding=ROUND_HALF_UP))
         x_change = xcord - x
         y_change = ycord - y
 
